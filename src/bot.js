@@ -9,8 +9,7 @@ const {
 } = require("discord.js");
 const getMapInfo = require("./getMapInfo");
 dotenv.config();
-mapBotChannel = "984386018868330577";
-haltDieText = "375369784063426561";
+
 mapTime = "0";
 
 module.exports = async function bot() {

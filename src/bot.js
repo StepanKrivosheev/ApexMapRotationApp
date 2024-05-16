@@ -83,5 +83,5 @@ module.exports = async function bot() {
     if (time === mapTimeC) {
       await updateNickname();
     }
-  }, 10 /*sec*/ * 1000 /*millisec*/);
+  }, 60 /*sec*/ * 1000 /*millisec*/);
 };

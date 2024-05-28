@@ -1,6 +1,12 @@
 const dotenv = require('dotenv');
 
-const { Client, GatewayIntentBits, ActivityType, MessageCollector } = require('discord.js');
+const {
+	Client,
+	GatewayIntentBits,
+	ActivityType,
+	MessageCollector,
+	CategoryChannel,
+} = require('discord.js');
 const getMapInfo = require('./getMapInfo');
 
 dotenv.config();
@@ -13,75 +19,102 @@ let mapTimeC = '0';
 let timeOut = '15';
 
 module.exports = async function bot() {
-  const client = new Client({
-    intents: [
-      GatewayIntentBits.Guilds,
-      GatewayIntentBits.GuildMessages,
-      GatewayIntentBits.GuildPresences,
-      GatewayIntentBits.MessageContent,
-    ],
-  });
-  client.login(botToken);
+	const client = new Client({
+		intents: [
+			GatewayIntentBits.Guilds,
+			GatewayIntentBits.GuildMessages,
+			GatewayIntentBits.GuildPresences,
+			GatewayIntentBits.MessageContent,
+		],
+	});
+	client.login(botToken);
 
-  async function updateNickname() {
-    let mapInfo = await getMapInfo();
-    mapTimeC = mapInfo.mapTimeC;
+	async function updateNickname() {
+		const apexChannels = {};
+		let mapInfo = await getMapInfo();
+		mapTimeC = mapInfo.mapTimeC;
+		guilds = await client.guilds.fetch();
+		guildIDs = guilds.map((guild) => guild.id);
+		texChannels = {};
 
-    client.user.setPresence({
-      status: 'dnd',
-      activities: [
-        {
-          type: ActivityType.Custom,
-          name: mapInfo.infoC,
-        },
-      ],
-    });
-    client.channels.cache
-      .get(channelsArray[0])
-      .members.get(client.user.id)
-      .setNickname(mapInfo.curentMap);
+    
+		let channelsArray = guildIDs.map(async (guildID) => {
+			(await client.guilds.cache.get(guildID).channels.fetch()).toJSON();
+		});
 
-    if (timeOut <= 0) {
-      await client.user.setAvatar(mapInfo.avatar);
-      await client.user.setBanner(mapInfo.avatar);
-    }
+		console.log(channelsArray);
 
-    await channelsArray.forEach((element) => {
-      client.channels.cache.get(element).setTopic('R.M.: ' + mapInfo.infoR);
-    });
-  }
+		//texChannels.push(channels.find((channel) => channel.type == 0));
 
-  await client.on('ready', async () => {
-    updateNickname();
-  });
+		//console.log(texChannels.find((channel) => channel.topic.includes('Apex')));
 
-  await client.on('messageCreate', async (message) => {
-    if (message.content.match('/update')) {
-      await client.channels.cache.get(message.channelId).send('Updating....');
-      await updateNickname();
-      await message.channel.bulkDelete(2);
-    }
+		// apexChannels.push(
+		// 	texChannels.find((channel) => channel.topic.includes('Apex'))
+		// );
 
-    if (message.content.startsWith('/delete')) {
-      let x = 0;
-      x = message.toString().slice(8, 10);
-      await message.channel.bulkDelete(x);
-    }
-  });
+		// await client.channels.cache
+		// 	.get(texChannels[0].id)
+		// 	.members.get(client.user.id)
+		// 	.setNickname(mapInfo.curentMap);
+		// //console.log(apexChannels);
+		// apexChannels.forEach((element) => {
+		// 	console.log(element.id);
+		// 	client.channels.cache
+		// 		.get(element.id)
+		// 		.setTopic(
+		// 			'R.M.: ' +
+		// 				mapInfo.infoR +
+		// 				'\n\n\n\nprovided by: Apex LegendsMapBot\nby KrivS'
+		// 		);
+		// });
 
-  //checks the time every minute
+		// client.user.setPresence({
+		// 	status: 'dnd',
+		// 	activities: [
+		// 		{
+		// 			type: ActivityType.Custom,
+		// 			name: mapInfo.infoC,
+		// 		},
+		// 	],
+		// });
 
-  setInterval(async () => {
-    timeOut--;
-    time = Date(Date.now()).toString();
-    time = time.slice(16, 18) + ':' + time.slice(19, 21);
+		// if (timeOut <= 0) {
+		// 	await client.user.setAvatar(mapInfo.avatar);
+		// 	await client.user.setBanner(mapInfo.avatar);
+		// }
+	}
 
-    //starts if maptime = time
-    if (time === '19:00') {
-      await updateNickname();
-    }
-    if (time === mapTimeC) {
-      await updateNickname();
-    }
-  }, 60 /*sec*/ * 1000 /*millisec*/);
+	await client.on('ready', async () => {
+		updateNickname();
+	});
+
+	await client.on('messageCreate', async (message) => {
+		if (message.content.match('/update')) {
+			await client.channels.cache.get(message.channelId).send('Updating....');
+			await updateNickname();
+			await message.channel.bulkDelete(2);
+		}
+
+		if (message.content.startsWith('/delete')) {
+			let x = 0;
+			x = message.toString().slice(8, 10);
+			await message.channel.bulkDelete(x);
+		}
+	});
+
+	//checks the time every minute
+
+	setInterval(async () => {
+		timeOut--;
+		time = Date(Date.now()).toString();
+		time = time.slice(16, 18) + ':' + time.slice(19, 21);
+
+		//starts if maptime = time
+		if (time === '19:00') {
+			await updateNickname();
+		}
+		if (time === mapTimeC) {
+			await updateNickname();
+		}
+	}, 60 /*sec*/ * 1000 /*millisec*/);
 };
